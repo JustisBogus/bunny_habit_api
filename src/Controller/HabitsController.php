@@ -38,6 +38,7 @@ class HabitsController extends AbstractController
         $habit = $this->getDoctrine()->getRepository(Habit::class)->find($id);
         $data = json_decode($request->getContent(), true);
         $habit->setCompleted($data['completed']);
+        $habit->setModifiedDate(new \DateTime($data['modified_date']));
 
         $em = $this->getDoctrine()->getManager();
         $em->persist($habit);
