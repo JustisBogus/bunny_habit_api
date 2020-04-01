@@ -41,6 +41,12 @@ class User implements UserInterface, \Serializable
     private $password;
 
     /**
+     * @Assert\NotBlank()
+     * @Assert\Length(min=5, max=4096)
+     */
+    private $plainPassword;
+
+    /**
      * @ORM\Column(type="datetime")
      */
     private $created_date;
@@ -89,6 +95,16 @@ class User implements UserInterface, \Serializable
         $this->password = $password;
 
         return $this;
+    }
+
+    public function getPlainPassword()
+    {
+        return $this->plainPassword;
+    }
+
+    public function setPlainPassword($plainPassword): void
+    {
+        $this->plainPassword = $plainPassword;
     }
 
     public function getCreatedDate(): ?\DateTimeInterface

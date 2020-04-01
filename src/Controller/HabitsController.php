@@ -34,7 +34,6 @@ class HabitsController extends AbstractController
      */
     public function habit(Request $request, $id)
     {
-        
         $habit = $this->getDoctrine()->getRepository(Habit::class)->find($id);
         $data = json_decode($request->getContent(), true);
         $habit->setCompleted($data['completed']);
