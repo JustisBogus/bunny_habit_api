@@ -22,31 +22,33 @@ class AppFixtures extends Fixture
   
     public function load(ObjectManager $manager)
     {
-        $this->loadHabits($manager);
         $this->loadUsers($manager);
+        $this->loadHabits($manager);  
     }
 
     private function loadHabits(ObjectManager $manager)
     {
         $habit = new Habit();
         $habit->setHabit('meditate');
-        $habit->setCreatedDate(new \DateTime('2020-03-19 12:00:00'));
-        $habit->setModifiedDate(new \DateTime('2020-03-19 12:00:00'));
+        $habit->setCreatedDate(new \DateTime());
+        $habit->setModifiedDate(new \DateTime());
         $habit->setDayly('1');
         $habit->setType(1);
         $habit->setCompleted(false);
         $habit->setComment('');
+        $habit->setUser($this->getReference('justis'));
 
         $manager->persist($habit);
 
         $habit = new Habit();
         $habit->setHabit('read');
-        $habit->setCreatedDate(new \DateTime('2020-03-19 12:00:00'));
-        $habit->setModifiedDate(new \DateTime('2020-03-19 12:00:00'));
+        $habit->setCreatedDate(new \DateTime());
+        $habit->setModifiedDate(new \DateTime());
         $habit->setDayly('7');
         $habit->setType(1);
         $habit->setCompleted(false);
         $habit->setComment('');
+        $habit->setUser($this->getReference('justis'));
 
         $manager->persist($habit);
         $manager->flush();
@@ -58,8 +60,10 @@ class AppFixtures extends Fixture
         $user->setUsername('justis');
         $user->setEmail('ikick@mail.com');
         $user->setPassword($this->passwordEncoder->encodePassword($user, 'login1'));
-        $user->setCreatedDate(new \DateTime('2020-03-26 12:00:00'));
-        $user->setModifiedDate(new \DateTime('2020-03-26 12:00:00'));
+        $user->setCreatedDate(new \DateTime());
+        $user->setModifiedDate(new \DateTime());
+
+        $this->addReference('justis', $user);
 
         $manager->persist($user);
         $manager->flush();

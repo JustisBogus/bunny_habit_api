@@ -3,7 +3,10 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use phpDocumentor\Reflection\Types\Integer;
+use App\Entity\User;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\HabitRepository")
@@ -11,6 +14,7 @@ use phpDocumentor\Reflection\Types\Integer;
 class Habit
 {
     /**
+     * @Groups("habit")
      * @ORM\Id()
      * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
@@ -18,39 +22,55 @@ class Habit
     private $id;
 
     /**
+     * @Groups("habit")
      * @ORM\Column(type="string", length=255)
+     * @Assert\NotBlank()
+     * @Assert\Length(max=25)
      */
     private $habit;
 
     /**
+     * @Groups("habit")
      * @ORM\Column(type="datetime")
      */
     private $created_date;
 
     /**
+     * @Groups("habit")
      * @ORM\Column(type="datetime")
      */
     private $modified_date;
 
     /**
+     * @Groups("habit")
      * @ORM\Column(type="integer", length=5)
      */
     private $dayly;
 
     /**
+     * @Groups("habit")
      * @ORM\Column(type="integer", length=5)
      */
     private $type;
 
     /**
+     * @Groups("habit")
      * @ORM\Column(type="boolean")
      */
     private $completed;
 
     /**
+     * @Groups("habit")
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $comment;
+
+    /**
+     * @Groups("user")
+     * @ORM\ManyToOne(targetEntity="App\Entity\User", inversedBy="habits")
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private $user;
 
     public function getId(): ?int
     {
@@ -140,4 +160,23 @@ class Habit
 
         return $this;
     }
+
+    /**
+     * @return User
+     */
+    public function getUser(): User
+    {
+        return $this->user;
+    }
+
+    /**
+     * @param UserInterface $user
+     */
+    public function setUser(UserInterface $user)
+    {
+        $this->user = $user;
+
+        return $this;
+    }
+
 }

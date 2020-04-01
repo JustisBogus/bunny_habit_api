@@ -2,10 +2,13 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\UserRepository")
@@ -15,6 +18,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 class User implements UserInterface, \Serializable
 {
     /**
+     * @Groups({"user"})
      * @ORM\Id()
      * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
@@ -22,6 +26,7 @@ class User implements UserInterface, \Serializable
     private $id;
 
     /**
+     * @Groups("user")
      * @ORM\Column(type="string", length=255, unique=true)
      * @Assert\NotBlank()
      * @Assert\Length(min=5, max=255)
@@ -29,6 +34,7 @@ class User implements UserInterface, \Serializable
     private $username;
 
     /**
+     * @Groups("user")
      * @ORM\Column(type="string", length=255, unique=true)
      * @Assert\NotBlank()
      * @Assert\Email()"Doctrine\DBAL\Schema\Constraint
@@ -47,14 +53,26 @@ class User implements UserInterface, \Serializable
     private $plainPassword;
 
     /**
+     * @Groups("user")
      * @ORM\Column(type="datetime")
      */
     private $created_date;
 
     /**
+     * @Groups("user")
      * @ORM\Column(type="datetime")
      */
     private $modified_date;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\Habit", mappedBy="user")
+     */
+    private $habits;
+
+    public function __construct()
+    {
+        $this->habits = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -129,6 +147,14 @@ class User implements UserInterface, \Serializable
         $this->modified_date = $modified_date;
 
         return $this;
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getHabits()
+    {
+        return $this->habits;
     }
 
     public function getRoles()

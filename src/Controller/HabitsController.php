@@ -11,6 +11,7 @@ use Symfony\Component\Serializer\Serializer;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Serializer\SerializerInterface;
 
 /**
  * @Route("/")
@@ -21,11 +22,16 @@ class HabitsController extends AbstractController
     /**
      * @Route("/", name="habits", methods={"GET"})
      */
-    public function habits()
+    public function habits(SerializerInterface $serializer)
     {
         $repository = $this->getDoctrine()->getRepository(Habit::class);
         $items = $repository->findAll();
-        return $this->json($items);
+
+        $json = $serializer->serialize(
+            $items,
+            'json', ['groups' => ['user', 'habit']]
+        );
+        return new Response($json);
     }
 
     /**
