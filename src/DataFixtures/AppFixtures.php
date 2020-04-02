@@ -51,6 +51,30 @@ class AppFixtures extends Fixture
         $habit->setUser($this->getReference('justis'));
 
         $manager->persist($habit);
+
+        $habit = new Habit();
+        $habit->setHabit('jog');
+        $habit->setCreatedDate(new \DateTime());
+        $habit->setModifiedDate(new \DateTime());
+        $habit->setDayly('1');
+        $habit->setType(1);
+        $habit->setCompleted(false);
+        $habit->setComment('');
+        $habit->setUser($this->getReference('newuser'));
+
+        $manager->persist($habit);
+
+        $habit = new Habit();
+        $habit->setHabit('smoke');
+        $habit->setCreatedDate(new \DateTime());
+        $habit->setModifiedDate(new \DateTime());
+        $habit->setDayly('7');
+        $habit->setType(2);
+        $habit->setCompleted(false);
+        $habit->setComment('');
+        $habit->setUser($this->getReference('newuser'));
+
+        $manager->persist($habit);
         $manager->flush();
     }
 
@@ -64,6 +88,17 @@ class AppFixtures extends Fixture
         $user->setModifiedDate(new \DateTime());
 
         $this->addReference('justis', $user);
+
+        $manager->persist($user);
+
+        $user = new User();
+        $user->setUsername('newuser');
+        $user->setEmail('newuser@mail.com');
+        $user->setPassword($this->passwordEncoder->encodePassword($user, 'login1'));
+        $user->setCreatedDate(new \DateTime());
+        $user->setModifiedDate(new \DateTime());
+
+        $this->addReference('newuser', $user);
 
         $manager->persist($user);
         $manager->flush();

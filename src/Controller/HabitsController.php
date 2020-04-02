@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\CompletedHabit;
 use App\Entity\Habit;
+use App\Repository\HabitRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -12,6 +13,8 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\SerializerInterface;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 /**
  * @Route("/")
@@ -22,13 +25,17 @@ class HabitsController extends AbstractController
     /**
      * @Route("/", name="habits", methods={"GET"})
      */
-    public function habits(SerializerInterface $serializer)
+    public function habits(
+        SerializerInterface $serializer, TokenStorageInterface $tokenStorage, HabitRepository $habitRepository
+        )
     {
-        $repository = $this->getDoctrine()->getRepository(Habit::class);
-        $items = $repository->findAll();
-
+        //$this->denyAccessUnlessGranted('get', $habit);
+        $userId = $tokenStorage->getToken()->getUser()->getId();
+        $habits = $habitRepository->findAllHabitsByUserId($userId);
+        //$repository = $this->getDoctrine()->getRepository(Habit::class);
+        //$items = $repository->findAll();
         $json = $serializer->serialize(
-            $items,
+            $habits,
             'json', ['groups' => ['user', 'habit']]
         );
         return new Response($json);

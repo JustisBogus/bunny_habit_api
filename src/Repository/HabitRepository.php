@@ -19,6 +19,17 @@ class HabitRepository extends ServiceEntityRepository
         parent::__construct($registry, Habit::class);
     }
 
+    public function findAllHabitsByUserId($userId)
+    {
+        return $this->getEntityManager()
+            ->createQuery(
+                'SELECT h, u FROM App:Habit h ' .
+                'JOIN h.user u ' .
+                'WHERE u.id=:userId'
+            )->setParameter('userId', $userId)
+            ->getResult();
+    }
+    
     // /**
     //  * @return Habit[] Returns an array of Habit objects
     //  */
