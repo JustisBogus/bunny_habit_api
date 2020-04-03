@@ -19,6 +19,17 @@ class CompletedHabitRepository extends ServiceEntityRepository
         parent::__construct($registry, CompletedHabit::class);
     }
 
+    public function findAllCompletedHabitsByUserId($userId)
+    {
+        return $this->getEntityManager()
+            ->createQuery(
+                'SELECT c, u FROM App:CompletedHabit c ' .
+                'JOIN c.user u ' .
+                'WHERE u.id=:userId'
+            )->setParameter('userId', $userId)
+            ->getResult();
+    }
+
     // /**
     //  * @return CompletedHabit[] Returns an array of CompletedHabit objects
     //  */

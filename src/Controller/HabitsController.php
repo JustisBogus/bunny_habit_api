@@ -4,11 +4,11 @@ namespace App\Controller;
 
 use App\Entity\CompletedHabit;
 use App\Entity\Habit;
+use App\Repository\CompletedHabitRepository;
 use App\Repository\HabitRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Serializer\Serializer;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -138,26 +138,33 @@ class HabitsController extends AbstractController
             'json', ['groups' => ['user', 'habit']]
         );
 
-        return $this->json($json);
+        return new Response($json);
     }
 
      /**
      * @Route("/completed/{page}", name="completed_habits", defaults={"page": 1}, requirements={"id"="\d+"}, methods={"GET"})
      */
-    public function completed($page, Request $request)
+    public function completed($page, Request $request, CompletedHabitRepository $completedHabitRepository)
     {
+        $serializer = $this->serializer;
+        $tokenStorage = $this->tokenStorage; 
+        $userId = $tokenStorage->getToken()->getUser()->getId();
+        $completedHabits = $completedHabitRepository->findAllCompletedHabitsByUserId($userId);
         $limit = $request->get('limit', 42);
+        $items = [
+            'page' => $page,
+            'limit' => $limit,
+            'data' => $completedHabits            
+        ];
 
-        $repository = $this->getDoctrine()->getRepository(CompletedHabit::class);
-
-        $items = $repository->findAll();
-        return $this->json(
-            [
-                'page' => $page,
-                'limit' => $limit,
-                'data' => $items
-            ]
+        $json = $serializer->serialize(
+            $items,
+            'json', [
+                'groups' => ['user', 'completedHabit']
+            ]   
         );
+
+        return new Response($json);
     }
 
     /**
@@ -165,16 +172,22 @@ class HabitsController extends AbstractController
      */
     public function completedAdd(Request $request)
     {
-        /** @var Serializer $serializer */
-        $serializer = $this->get('serializer');
-
+        $serializer = $this->serializer;
+        $tokenStorage = $this->tokenStorage; 
+        $user = $tokenStorage->getToken()->getUser();
         $completedHabit = $serializer->deserialize($request->getContent(), CompletedHabit::class, 'json');
+        $completedHabit->setUser($user);
 
         $em = $this->getDoctrine()->getManager();
         $em->persist($completedHabit);
         $em->flush();
 
-        return $this->json($completedHabit);
+        $json = $serializer->serialize(
+            $completedHabit,
+            'json', ['groups' => ['user', 'completedHabit']]
+        );
+
+        return new Response($json);
     }
 
     /*

@@ -69,9 +69,15 @@ class User implements UserInterface, \Serializable
      */
     private $habits;
 
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\CompletedHabit", mappedBy="user")
+     */
+    private $completedHabits;
+
     public function __construct()
     {
         $this->habits = new ArrayCollection();
+        $this->completedHabits = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -155,6 +161,14 @@ class User implements UserInterface, \Serializable
     public function getHabits()
     {
         return $this->habits;
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getCompletedHabits()
+    {
+        return $this->completedHabits;
     }
 
     public function getRoles()
