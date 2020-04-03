@@ -9,13 +9,13 @@ use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
 class HabitVoter extends Voter 
 {
-    const GET = 'get';
-    const EDIT = 'edit';
+    const UPDATE = 'update';
+    const RESET = 'reset';
     const DELETE = 'delete';
 
     protected function supports($attribute, $subject)
     {
-        if (!in_array($attribute, [self::GET, self::EDIT, self::DELETE])) {
+        if (!in_array($attribute, [self::UPDATE, self::RESET, self::DELETE])) {
             return false;
         }
 

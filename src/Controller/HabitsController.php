@@ -13,25 +13,53 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\SerializerInterface;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 
 /**
  * @Route("/")
  */
 class HabitsController extends AbstractController
 {
+    /**
+     * @var SerializerInterface
+     */
+    private $serializer;
+
+    /**
+     * @var TokenStorage
+     */
+    private $tokenStorage;
+
+    public function __construct(SerializerInterface $serializer, TokenStorageInterface $tokenStorage)
+    {
+        $this->serializer = $serializer;
+        $this->tokenStorage = $tokenStorage;
+    }
 
     /**
      * @Route("/", name="habits", methods={"GET"})
      */
-    public function habits(
-        SerializerInterface $serializer, TokenStorageInterface $tokenStorage, HabitRepository $habitRepository
-        )
+    public function habits(HabitRepository $habitRepository)
     {
         //$this->denyAccessUnlessGranted('get', $habit);
+        $dateNow = new \DateTime();
+        $date = $dateNow->format('Y-m-d');
+        $serializer = $this->serializer;
+        $tokenStorage = $this->tokenStorage; 
         $userId = $tokenStorage->getToken()->getUser()->getId();
         $habits = $habitRepository->findAllHabitsByUserId($userId);
+
+        for ($i=0; $i<count($habits); $i++ )
+        {
+            if ($habits[$i]->getModifiedDate()->format('Y-m-d') < $date) {
+                $habits[$i]->setCompleted(false);
+                $habits[$i]->setModifiedDate(new \DateTime());
+                $id = $habits[$i]->getId();
+                $this->habitReset($id);
+            }       
+        }
+        
         //$repository = $this->getDoctrine()->getRepository(Habit::class);
         //$items = $repository->findAll();
         $json = $serializer->serialize(
@@ -42,11 +70,37 @@ class HabitsController extends AbstractController
     }
 
     /**
+     * @Route("/habit/reset/{id}", name="habit_reset", requirements={"id"="\d+"}, methods={"PUT"})
+     * @ParamConverter("habit", class="App:Habit")
+     * @Security("is_granted('reset', habit)", message="Access denied")
+     */
+    public function habitReset($id)
+    {
+        $serializer=$this->serializer;
+        $habit = $this->getDoctrine()->getRepository(Habit::class)->find($id);
+        $habit->setCompleted(false);
+        $habit->setModifiedDate(new \DateTime());
+
+        $em = $this->getDoctrine()->getManager();
+        $em->persist($habit);
+        $em->flush();
+
+        $json = $serializer->serialize(
+            $habit,
+            'json', ['groups' => ['user', 'habit']]
+        );
+
+        return new Response($json);
+    }
+
+    /**
      * @Route("/habit/update/{id}", name="habit_update", requirements={"id"="\d+"}, methods={"PUT"})
      * @ParamConverter("habit", class="App:Habit")
+     * @Security("is_granted('update', habit)", message="Access denied")
      */
-    public function habit(Request $request, $id)
+    public function habitUpdate(Request $request, $id)
     {
+        $serializer=$this->serializer;
         $habit = $this->getDoctrine()->getRepository(Habit::class)->find($id);
         $data = json_decode($request->getContent(), true);
         $habit->setCompleted($data['completed']);
@@ -56,7 +110,12 @@ class HabitsController extends AbstractController
         $em->persist($habit);
         $em->flush();
 
-        return $this->json($habit);
+        $json = $serializer->serialize(
+            $habit,
+            'json', ['groups' => ['user', 'habit']]
+        );
+
+        return new Response($json);
     }
 
     /**
@@ -64,16 +123,22 @@ class HabitsController extends AbstractController
     */
     public function habitAdd(Request $request)
     {
-        /** @var Serializer $serializer */
-        $serializer = $this->get('serializer');
-
+        $tokenStorage = $this->tokenStorage;
+        $serializer = $this->serializer;
+        $user = $tokenStorage->getToken()->getUser();
         $habit = $serializer->deserialize($request->getContent(), Habit::class, 'json');
+        $habit->setUser($user);
 
         $em = $this->getDoctrine()->getManager();
         $em->persist($habit);
         $em->flush();
 
-        return $this->json($habit);
+        $json = $serializer->serialize(
+            $habit,
+            'json', ['groups' => ['user', 'habit']]
+        );
+
+        return $this->json($json);
     }
 
      /**
@@ -132,7 +197,8 @@ class HabitsController extends AbstractController
     */
 
     /**
-     * @Route("/delete/{id}", name="habit_delete", methods={"DELETE"})
+     * @Route("/habit/delete/{id}", name="habit_delete", methods={"DELETE"})
+     * @Security("is_granted('delete', habit)", message="Access denied")
      */
     public function delete(Habit $habit)
     {
